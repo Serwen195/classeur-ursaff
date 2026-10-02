@@ -55,7 +55,7 @@
   },
   "plugins": {
     "updater": {
-      "pubkey": "REMPLACER_PAR_LA_CLE_PUBLIQUE_DE_SIGNATURE",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEQ3ODI2RDU2QTVFQkQ1NjAKUldSZzFldWxWbTJDMXpSNkl2NU5KaU1lZm12QndkRVhZNC9mRVFnd2tuVUVpTW9LMmljaStuOEMK",
       "endpoints": [
         "https://github.com/Serwen195/classeur-ursaff/releases/latest/download/latest.json"
       ],

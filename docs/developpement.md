@@ -67,15 +67,12 @@ Le trousseau réel n'est pas exercé par la CI Linux. Test manuel (macOS, Window
 
 ### Une fois pour toutes : clé de signature des mises à jour
 
-```bash
-npx tauri signer generate -w ~/.tauri/classeur-urssaf.key
-```
+La paire de clés est déjà créée : la **clé publique** est dans `src-tauri/tauri.conf.json` (`plugins.updater.pubkey`) ; c'est elle que les applications installées utilisent pour vérifier les mises à jour. La **clé privée** (non protégée par mot de passe) ne doit exister que dans deux endroits : le secret GitHub et votre sauvegarde personnelle.
 
-1. Copiez la **clé publique** affichée (contenu de `classeur-urssaf.key.pub`) dans `src-tauri/tauri.conf.json` → `plugins.updater.pubkey`, à la place de `REMPLACER_PAR_LA_CLE_PUBLIQUE_DE_SIGNATURE`, et commitez.
-2. Dans le dépôt GitHub : *Settings → Secrets and variables → Actions* → ajoutez :
-   - `TAURI_SIGNING_PRIVATE_KEY` : le **contenu** du fichier de clé privée ;
-   - `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` : son mot de passe (vide si aucun).
-3. Sauvegardez la clé privée ailleurs (gestionnaire de mots de passe). **Ne la commitez jamais** (`*.key` est dans `.gitignore`). Si vous la perdez, les applications déjà installées ne pourront plus se mettre à jour : il faudra réinstaller manuellement une version portant une nouvelle clé publique.
+1. Dans le dépôt GitHub : *Settings → Secrets and variables → Actions → New repository secret* → nom `TAURI_SIGNING_PRIVATE_KEY`, valeur : le **contenu** complet du fichier de clé privée. (Aucun second secret n'est nécessaire, la clé n'ayant pas de mot de passe.)
+2. Sauvegardez la clé privée ailleurs (gestionnaire de mots de passe). **Ne la commitez jamais** (`*.key` est dans `.gitignore`). Si vous la perdez, les applications déjà installées ne pourront plus se mettre à jour : il faudra réinstaller manuellement une version portant une nouvelle clé publique.
+
+Pour recréer une paire de clés : `npx tauri signer generate -w ~/.tauri/classeur-urssaf.key`, puis remplacez `pubkey` dans `tauri.conf.json` et le secret GitHub. Si vous ajoutez un mot de passe à la clé, créez aussi le secret `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`.
 
 ### À chaque version
 
