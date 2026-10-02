@@ -1,20 +1,33 @@
 name: Release
 
-# Publier une version : mettre à jour `version` dans Cargo.toml ([workspace.package]), commiter,
-# puis créer et pousser le tag correspondant :  git tag v0.2.0 && git push origin v0.2.0
+# Deux façons de publier une version (dans les deux cas : mettre d'abord à jour `version` dans
+# Cargo.toml, section [workspace.package], et fusionner dans main) :
+#
+#  1. Depuis GitHub, sans ligne de commande : onglet Actions -> « Release » -> « Run workflow »,
+#     indiquer la version (ex. v0.2.0).
+#  2. En poussant une étiquette :  git tag v0.2.0 && git push origin v0.2.0
+#
 # Le workflow compile les installeurs (Windows, macOS Intel + Apple Silicon, Linux), signe les
-# mises à jour et prépare une release **brouillon** : relisez-la puis cliquez sur « Publish ».
+# mises à jour et prépare une release **brouillon** : relisez-la puis cliquez sur « Publish release ».
 # Les applications installées ne voient la nouvelle version qu'après cette publication.
 
 on:
   push:
     tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Version à publier, par exemple v0.1.0 (doit correspondre à `version` dans Cargo.toml)"
+        required: true
+        default: v0.1.0
 
 permissions:
   contents: write
 
 env:
   CARGO_TERM_COLOR: always
+  # Étiquette de la version : saisie du bouton « Run workflow », sinon nom de l'étiquette poussée.
+  TAG: ${{ inputs.tag || github.ref_name }}
 
 jobs:
   checks:
@@ -27,12 +40,13 @@ jobs:
             echo "::error file=src-tauri/tauri.conf.json::Remplacez 'pubkey' par la clé publique générée avec 'npx tauri signer generate' (voir docs/developpement.md)."
             exit 1
           fi
-      - name: Le tag correspond à la version du code
+      - name: La version demandée correspond à celle du code
         run: |
           code_version=$(grep -m1 '^version' Cargo.toml | sed -E 's/version *= *"([^"]+)"/\1/')
-          tag_version="${GITHUB_REF_NAME#v}"
+          case "$TAG" in v[0-9]*) ;; *) echo "::error::La version doit ressembler à v0.1.0 (reçu : « $TAG »)."; exit 1;; esac
+          tag_version="${TAG#v}"
           if [ "$code_version" != "$tag_version" ]; then
-            echo "::error::Le tag ($GITHUB_REF_NAME) ne correspond pas à la version de Cargo.toml ($code_version)."
+            echo "::error::La version demandée ($TAG) ne correspond pas à celle de Cargo.toml ($code_version)."
             exit 1
           fi
       - name: La clé privée de signature est configurée
@@ -85,8 +99,8 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
-          tagName: ${{ github.ref_name }}
-          releaseName: Classeur URSSAF ${{ github.ref_name }}
+          tagName: ${{ env.TAG }}
+          releaseName: Classeur URSSAF ${{ env.TAG }}
           releaseBody: |
             Installez la version correspondant à votre système (voir les fichiers ci-dessous).
             Les applications déjà installées proposent la mise à jour automatiquement.
