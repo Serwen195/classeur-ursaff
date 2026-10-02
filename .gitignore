@@ -1,0 +1,20 @@
+# Compilation
+/target/
+/dist/
+node_modules/
+src-tauri/gen/
+
+# Tests
+test-results/
+playwright-report/
+
+# Divers
+.DS_Store
+Thumbs.db
+*.log
+
+# Ne jamais versionner de clés ni de données
+*.key
+*.pem
+.env
+.env.*
