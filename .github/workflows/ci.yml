@@ -80,6 +80,13 @@ jobs:
       - name: Synchronisation Git réelle en HTTP avec jeton
         if: runner.os == 'Linux'
         run: cargo test -p classeur-core --test http_remote -- --ignored
+      # La version Intel de macOS est compilée depuis une machine Apple Silicon : on vérifie ici que
+      # la chaîne Git/OpenSSL se compile bien pour cette cible, avant de publier.
+      - name: Compilation croisée macOS Intel
+        if: runner.os == 'macOS'
+        run: |
+          rustup target add x86_64-apple-darwin
+          cargo build -p classeur-core --target x86_64-apple-darwin
       # Informatif : le trousseau réel (Windows : Gestionnaire d'identifiants ; macOS : Trousseau).
       - name: Trousseau système réel
         if: runner.os != 'Linux'

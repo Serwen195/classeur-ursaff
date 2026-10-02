@@ -21,5 +21,12 @@ thiserror = "2"
 unicode-normalization = "0.1"
 zeroize = { version = "1", features = ["derive"] }
 
+# macOS : libgit2 dépend d'OpenSSL via openssl-sys. Sans cette ligne, openssl-sys cherche une copie
+# installée sur la machine de compilation (Homebrew) : la compilation croisée vers Intel échoue, et
+# même quand elle réussit, l'application dépendrait d'un fichier absent des Mac des utilisateurs.
+# `vendored` compile OpenSSL et l'embarque dans l'application.
+[target.'cfg(target_os = "macos")'.dependencies]
+openssl-sys = { version = "0.9", features = ["vendored"] }
+
 [dev-dependencies]
 tempfile = "3"
