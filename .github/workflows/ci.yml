@@ -1,0 +1,83 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  # Interface : types, tests unitaires, build, puis parcours complets dans un navigateur
+  # contre le faux backend (src/lib/mock.ts).
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      - run: npm test
+      - run: npm run build
+      - name: Vérifier que le faux backend n'est pas dans la version finale
+        run: |
+          if grep -rl "phrase secrete de test" dist/; then
+            echo "::error::le code du faux backend a fuité dans dist/"; exit 1
+          fi
+      - run: npx playwright install --with-deps chromium
+      - run: npm run e2e
+
+  # Rust : format et lints (Linux), tests sur les trois systèmes.
+  # Les tests d'intégration de la coque pilotent les vraies commandes sur de vrais dépôts Git.
+  rust:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Dépendances système (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: swatinem/rust-cache@v2
+      # `tauri::generate_context!` embarque le dossier dist/ : il doit exister.
+      - run: npm ci
+      - run: npm run build
+      - name: Format
+        if: runner.os == 'Linux'
+        run: cargo fmt --all -- --check
+      - name: Clippy
+        if: runner.os == 'Linux'
+        run: cargo clippy --workspace --all-targets -- -D warnings
+      - run: cargo test --workspace
+      # Vrai serveur Git HTTP (git http-backend) protégé par jeton : clone, push, pull, fusion.
+      - name: Synchronisation Git réelle en HTTP avec jeton
+        if: runner.os == 'Linux'
+        run: cargo test -p classeur-core --test http_remote -- --ignored
+      # Informatif : le trousseau réel (Windows : Gestionnaire d'identifiants ; macOS : Trousseau).
+      - name: Trousseau système réel
+        if: runner.os != 'Linux'
+        continue-on-error: true
+        timeout-minutes: 5
+        run: cargo test -p classeur-urssaf -- --ignored keychain
