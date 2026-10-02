@@ -114,6 +114,10 @@ pub struct AppState {
     pub repo: Mutex<Option<Arc<DataRepo>>>,
     pub vault: Mutex<Option<Arc<Vault>>>,
     last_activity: Mutex<Instant>,
+    /// Inactivité simulée, ajoutée à la durée réelle (tests uniquement). On n'écrit pas
+    /// `Instant::now() - durée` : sous Windows cela panique si la machine a démarré depuis moins longtemps.
+    #[cfg(test)]
+    idle_bonus: Mutex<Duration>,
     sync_state: Mutex<SyncState>,
     sync_running: AtomicBool,
     sync_again: AtomicBool,
@@ -134,6 +138,8 @@ impl AppState {
             repo: Mutex::new(repo.map(Arc::new)),
             vault: Mutex::new(None),
             last_activity: Mutex::new(Instant::now()),
+            #[cfg(test)]
+            idle_bonus: Mutex::new(Duration::ZERO),
             sync_state: Mutex::new(SyncState::initial()),
             sync_running: AtomicBool::new(false),
             sync_again: AtomicBool::new(false),
@@ -143,6 +149,10 @@ impl AppState {
 
     pub fn touch(&self) {
         *lock(&self.last_activity) = Instant::now();
+        #[cfg(test)]
+        {
+            *lock(&self.idle_bonus) = Duration::ZERO;
+        }
     }
 
     pub fn config(&self) -> Config {
@@ -181,7 +191,10 @@ impl AppState {
     }
 
     pub fn idle_for(&self) -> Duration {
-        lock(&self.last_activity).elapsed()
+        let real = lock(&self.last_activity).elapsed();
+        #[cfg(test)]
+        let real = real + *lock(&self.idle_bonus);
+        real
     }
 
     /// Aucune synchronisation en cours ni en attente (utilisé par les tests pour attendre).
@@ -192,7 +205,8 @@ impl AppState {
 
     #[cfg(test)]
     pub fn pretend_idle_for(&self, d: Duration) {
-        *lock(&self.last_activity) = Instant::now() - d;
+        *lock(&self.last_activity) = Instant::now();
+        *lock(&self.idle_bonus) = d;
     }
 }
 

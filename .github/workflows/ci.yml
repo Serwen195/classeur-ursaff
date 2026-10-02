@@ -71,7 +71,7 @@ jobs:
       - name: Clippy
         if: runner.os == 'Linux'
         run: cargo clippy --workspace --all-targets -- -D warnings
-      - run: cargo test --workspace
+      - run: cargo test --workspace --no-fail-fast
       # Vrai serveur Git HTTP (git http-backend) protégé par jeton : clone, push, pull, fusion.
       - name: Synchronisation Git réelle en HTTP avec jeton
         if: runner.os == 'Linux'
