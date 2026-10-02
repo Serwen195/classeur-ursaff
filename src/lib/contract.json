@@ -1,0 +1,17 @@
+{
+  "_comment": "Source unique du contrat JSON Rust ↔ TypeScript. Vérifié par src/lib/contract.test.ts (contre types.ts) et par src-tauri/src/e2e_tests.rs (contre la vraie sérialisation).",
+  "objects": {
+    "AppStatus": ["autoLockMinutes", "phase", "remoteUrl", "sync", "version"],
+    "SyncState": ["conflicts", "ignoredFiles", "lastSyncAt", "message", "pending", "status"],
+    "ConflictInfo": ["month", "year"],
+    "MonthRecord": ["amountCents", "attachments", "declaredOn", "month", "notes", "status", "updatedAt", "year"],
+    "Attachment": ["addedAt", "id", "mime", "name", "size"],
+    "UnlockResult": ["records", "skipped"],
+    "AddAttachmentsResult": ["errors", "record"]
+  },
+  "enums": {
+    "Phase": ["locked", "needs_vault_creation", "not_configured", "unlocked"],
+    "SyncStatus": ["auth_error", "deferred", "error", "idle", "offline", "syncing"],
+    "Status": ["declared", "paid", "to_declare"]
+  }
+}
