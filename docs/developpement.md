@@ -76,9 +76,11 @@ Pour recréer une paire de clés : `npx tauri signer generate -w ~/.tauri/classe
 
 ### À chaque version
 
-1. Changez `version` dans `Cargo.toml` (`[workspace.package]`), commitez.
-2. `git tag v0.2.0 && git push origin v0.2.0`.
-3. Le workflow *Release* vérifie la clé publique, la cohérence tag/version, passe les tests, compile Windows, macOS (Apple Silicon + Intel) et Linux, signe les mises à jour et prépare une release **brouillon** contenant les installeurs et `latest.json`.
+1. Changez `version` dans `Cargo.toml` (`[workspace.package]`) et fusionnez dans `main` (par une pull request).
+2. Lancez la fabrication, au choix :
+   - **depuis GitHub, sans ligne de commande** : onglet *Actions* → *Release* → *Run workflow* → saisissez la version (par exemple `v0.2.0`) → *Run workflow* ;
+   - ou en poussant une étiquette : `git tag v0.2.0 && git push origin v0.2.0`.
+3. Le workflow *Release* vérifie la clé de signature, la cohérence version/Cargo.toml, passe les tests, compile Windows, macOS (Apple Silicon + Intel) et Linux, signe les mises à jour et prépare une release **brouillon** contenant les installeurs et `latest.json`.
 4. Testez un installeur, puis cliquez sur **Publish release**. Les applications installées proposeront la mise à jour au prochain lancement.
 
 ### Dépôt privé ou public ?
