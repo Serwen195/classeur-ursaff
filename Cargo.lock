@@ -619,6 +619,7 @@ name = "classeur-urssaf"
 version = "0.1.0"
 dependencies = [
  "classeur-core",
+ "embed-resource",
  "git2",
  "keyring",
  "serde",

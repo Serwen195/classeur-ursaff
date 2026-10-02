@@ -72,6 +72,10 @@ jobs:
         if: runner.os == 'Linux'
         run: cargo clippy --workspace --all-targets -- -D warnings
       - run: cargo test --workspace --no-fail-fast
+      # Compile aussi le vrai exécutable (les tests ne le construisent pas en mode normal) : vérifie
+      # l'édition de liens et l'embarquement du manifeste Windows avant toute publication.
+      - name: Compilation de l'exécutable
+        run: cargo build -p classeur-urssaf
       # Vrai serveur Git HTTP (git http-backend) protégé par jeton : clone, push, pull, fusion.
       - name: Synchronisation Git réelle en HTTP avec jeton
         if: runner.os == 'Linux'
